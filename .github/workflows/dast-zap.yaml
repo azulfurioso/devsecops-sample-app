@@ -1,0 +1,47 @@
+name: DAST - OWASP ZAP Baseline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  dast:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t sample-app:${{ github.sha }} .
+
+      - name: Run app in background
+        run: |
+          docker run -d --name sample-app -p 3000:3000 sample-app:${{ github.sha }}
+          for i in {1..30}; do
+            if curl -sSf http://localhost:3000 > /dev/null; then
+              echo "App is up"
+              exit 0
+            fi
+            echo "Waiting for app..."
+            sleep 2
+          done
+          echo "App did not start in time"
+          docker logs sample-app
+          exit 1
+
+      - name: OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'http://localhost:3000'
+          allow_issue_writing: false
+          # Si querés que el job falle cuando ZAP encuentra alertas:
+          # fail_action: true
+          # Opcional: reglas personalizadas
+          # rules_file_name: '.zap/rules.tsv'
+
+      - name: Stop app
+        if: always()
+        run: docker stop sample-app && docker rm sample-app
