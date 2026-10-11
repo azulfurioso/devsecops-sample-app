@@ -32,6 +32,25 @@ jobs:
           docker logs sample-app
           exit 1
 
+      ## sin docker, levantando con node
+      #- name: Setup Node
+      #  uses: actions/setup-node@v4
+      #  with:
+      #    node-version: '18'
+      #    cache: 'npm'
+
+      # - run: npm ci
+
+      # - name: Start app
+      #  run: |
+      #    npm start &
+      #    for i in {1..30}; do
+      #      if curl -sSf http://localhost:3000 > /dev/null; then exit 0; fi
+      #      sleep 2
+      #    done
+      #    exit 1
+      ##
+
       - name: OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
