@@ -60,6 +60,8 @@ jobs:
           # fail_action: true
           # Opcional: reglas personalizadas
           # rules_file_name: '.zap/rules.tsv'
+          artifact_name: zap-scan-report        # <-- change this line
+
 
       - name: Stop app
         if: always()
