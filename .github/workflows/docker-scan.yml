@@ -40,4 +40,6 @@ jobs:
       - name: Scan image with Trivy
         run: |
           docker pull ghcr.io/${{ github.repository_owner }}/devsecops-sample-app:latest
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL ghcr.io/${{ github.repository_owner }}/devsecops-sample-app:latest
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock  \
+            aquasec/trivy:latest image --severity HIGH,CRITICAL \
+            ghcr.io/${{ github.repository_owner }}/devsecops-sample-app:latest
