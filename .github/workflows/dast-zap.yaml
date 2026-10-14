@@ -30,9 +30,9 @@ jobs:
           # Note: runner's shell can't resolve "$APP" hostname, so curl check needs to run inside container
           docker run -d --name "$APP" --network "$NET" "$APP":${{ github.sha }}
           check=(docker run --rm --network "$NET" curlimages/curl:8.23.0 -sSf http://"$APP":"$PORT")
-          for i in {1..30}; do
-            echo ${check[*]}                  # ${check[*]} → un solo string con los elementos separados por espacio
-            if ${check[@]} > /dev/null; then  # "${check[@]}" → ejecuta con cada elemento como un argumento distinto
+          for _ in {1..30}; do
+            echo "${check[*]}"                  # ${check[*]} → un solo string con los elementos separados por espacio
+            if "${check[@]}" > /dev/null; then  # "${check[@]}" → ejecuta con cada elemento como un argumento distinto
               echo "App is up"
               exit 0
             fi
