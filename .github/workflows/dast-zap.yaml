@@ -17,9 +17,12 @@ jobs:
       - name: Build Docker image
         run: docker build -t sample-app:${{ github.sha }} .
 
+      - name: Crear red
+        run: docker network create --internal zapnet
+
       - name: Run app in background
         run: |
-          docker run -d --name sample-app -p 3000:3000 sample-app:${{ github.sha }}
+          docker run -d --name sample-app --newtwork zapnet -p 3000:3000 sample-app:${{ github.sha }}
           for i in {1..30}; do
             if curl -sSf http://localhost:3000 > /dev/null; then
               echo "App is up"
@@ -52,15 +55,18 @@ jobs:
       ##
 
       - name: OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
+        uses: azulfurioso/action-baseline@v1.0.0
+
         with:
           target: 'http://localhost:3000'
           allow_issue_writing: false
+          network: 'container:sample-app' 
+
           # Si querés que el job falle cuando ZAP encuentra alertas:
           # fail_action: true
           # Opcional: reglas personalizadas
           # rules_file_name: '.zap/rules.tsv'
-          artifact_name: zap-scan-report        # <-- change this line
+          # artifact_name: zap-scan-report        # <-- change this line
 
 
       - name: Stop app
