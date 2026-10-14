@@ -22,7 +22,7 @@ jobs:
 
       - name: Run app in background
         run: |
-          docker run -d --name sample-app --newtwork zapnet -p 3000:3000 sample-app:${{ github.sha }}
+          docker run -d --name sample-app --network zapnet -p 3000:3000 sample-app:${{ github.sha }}
           for i in {1..30}; do
             if curl -sSf http://localhost:3000 > /dev/null; then
               echo "App is up"
