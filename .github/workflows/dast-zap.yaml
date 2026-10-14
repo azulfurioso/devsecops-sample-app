@@ -9,60 +9,44 @@ on:
 
 jobs:
   dast:
+    env:
+      APP: sample-app
+      NET: zapnet
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t sample-app:${{ github.sha }} .
+        run: docker build -t $APP:${{ github.sha }} .
 
       - name: Crear red
-        run: docker network create --internal zapnet
+        run: docker network create --internal $NET
 
       - name: Run app in background
         run: |
-          docker run -d --name sample-app --network zapnet sample-app:${{ github.sha }}
-          checkcmd="docker run --rm --network zapnet curlimages/curl:8.23.0 -sSf http://sample-app:3000"
+          cmd=(docker run --rm --network $NET curlimages/curl:8.23.0 -sSf http://$APP:3000)
           for i in {1..30}; do
-            sleep 2
-            echo $checkcmd
-            if eval $checkcmd > /dev/null; then
+            echo ${cmd[*]}                  # ${cmd[*]} → un solo string con los elementos separados por espacio 
+            if ${cmd[@]} > /dev/null; then  # "${cmd[@]}" → ejecuta con cada elemento como un argumento distinto 
               echo "App is up"
               exit 0
             fi
             echo "Waiting for app..."
+            sleep 2
           done
           echo "App did not start in time"
-          docker logs sample-app
+          docker logs $APP
           exit 1
-
-      ## sin docker, levantando con node
-      #- name: Setup Node
-      #  uses: actions/setup-node@v4
-      #  with:
-      #    node-version: '18'
-      #    cache: 'npm'
-
-      # - run: npm ci
-
-      # - name: Start app
-      #  run: |
-      #    npm start &
-      #    for i in {1..30}; do
-      #      if curl -sSf http://sample-app:3000 > /dev/null; then exit 0; fi
-      #      sleep 2
-      #    done
-      #    exit 1
-      ##
 
       - name: OWASP ZAP Baseline Scan
         uses: azulfurioso/action-baseline@v1.0.1
 
         with:
-          target: 'http://sample-app:3000'
+          target: 'http://${{ env.APP }}:3000'
           allow_issue_writing: false
-          network: 'container:sample-app' 
+          network: 'container:${{ env.NET }}' 
 
           # Si querés que el job falle cuando ZAP encuentra alertas:
           # fail_action: true
@@ -73,4 +57,4 @@ jobs:
 
       - name: Stop app
         if: always()
-        run: docker stop sample-app && docker rm sample-app
+        run: docker stop $APP && docker rm $APP
