@@ -10,8 +10,9 @@ on:
 jobs:
   dast:
     env:
-      APP: sample-app
-      NET: zapnet
+      APP: sample-app # name for builded image & container
+      NET: zapnet     # (arbitrary) internal name for app and zap scanner
+      PORT: 3000      # app listening port
 
     runs-on: ubuntu-latest
     steps:
@@ -19,17 +20,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t $APP:${{ github.sha }} .
+        run: { docker build -t $APP:${{ github.sha }} . ; docker image ls; id; }
 
       - name: Crear red
-        run: docker network create --internal $NET
+        run: { docker network create --internal $NET; docker network ls; }
 
       - name: Run app in background
         run: |
-          cmd=(docker run --rm --network $NET curlimages/curl:8.23.0 -sSf http://$APP:3000)
+          # Note: runner's shell can't resolve $APP hostname, so curl check needs to run inside container
+          docker run -d --name $APP --network $NET $APP:${{ github.sha }}
+          check=(docker run --rm --network $NET curlimages/curl:8.23.0 -sSf http://$APP:$PORT)
           for i in {1..30}; do
-            echo ${cmd[*]}                  # ${cmd[*]} → un solo string con los elementos separados por espacio 
-            if ${cmd[@]} > /dev/null; then  # "${cmd[@]}" → ejecuta con cada elemento como un argumento distinto 
+            echo ${check[*]}                  # ${check[*]} → un solo string con los elementos separados por espacio 
+            if ${check[@]} > /dev/null; then  # "${check[@]}" → ejecuta con cada elemento como un argumento distinto 
               echo "App is up"
               exit 0
             fi
@@ -44,7 +47,7 @@ jobs:
         uses: azulfurioso/action-baseline@v1.0.1
 
         with:
-          target: 'http://${{ env.APP }}:3000'
+          target: 'http://${{ env.APP }}:${{ env.PORT }}'
           allow_issue_writing: false
           network: 'container:${{ env.NET }}' 
 
