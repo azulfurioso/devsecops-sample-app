@@ -22,14 +22,16 @@ jobs:
 
       - name: Run app in background
         run: |
-          docker run -d --name sample-app --network zapnet -p 3000:3000 sample-app:${{ github.sha }}
+          docker run -d --name sample-app --network zapnet sample-app:${{ github.sha }}
+          checkcmd="docker run --rm --network zapnet curlimages/curl:8.23.0 -sSf http://sample-app:3000"
           for i in {1..30}; do
-            if curl -sSf http://sample-app:3000 > /dev/null; then
+            sleep 2
+            echo $checkcmd
+            if eval $checkcmd > /dev/null; then
               echo "App is up"
               exit 0
             fi
             echo "Waiting for app..."
-            sleep 2
           done
           echo "App did not start in time"
           docker logs sample-app
