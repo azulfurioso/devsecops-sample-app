@@ -57,7 +57,7 @@ jobs:
       ##
 
       - name: OWASP ZAP Baseline Scan
-        uses: azulfurioso/action-baseline@v1.0.0
+        uses: azulfurioso/action-baseline@v1.0.0-hardwire
 
         with:
           target: 'http://sample-app:3000'
