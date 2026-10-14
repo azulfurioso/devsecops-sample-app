@@ -24,7 +24,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - uses: raven-actions/actionlint@v2
+      - name: Lint
+        uses: raven-actions/actionlint@v2
 
       - name: Use Node.js
         uses: actions/setup-node@v4

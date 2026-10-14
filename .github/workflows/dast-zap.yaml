@@ -20,16 +20,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t $APP:${{ github.sha }} . && docker image ls && id
+        run: docker build -t "$APP":${{ github.sha }} . && docker image ls && id
 
       - name: Crear red
-        run: docker network create --internal $NET && docker network ls
+        run: docker network create --internal "$NET" && docker network ls
 
       - name: Run app in background
         run: |
-          # Note: runner's shell can't resolve $APP hostname, so curl check needs to run inside container
-          docker run -d --name $APP --network $NET $APP:${{ github.sha }}
-          check=(docker run --rm --network $NET curlimages/curl:8.23.0 -sSf http://$APP:$PORT)
+          # Note: runner's shell can't resolve "$APP" hostname, so curl check needs to run inside container
+          docker run -d --name "$APP" --network "$NET" "$APP":${{ github.sha }}
+          check=(docker run --rm --network "$NET" curlimages/curl:8.23.0 -sSf http://"$APP":"$PORT")
           for i in {1..30}; do
             echo ${check[*]}                  # ${check[*]} → un solo string con los elementos separados por espacio
             if ${check[@]} > /dev/null; then  # "${check[@]}" → ejecuta con cada elemento como un argumento distinto
@@ -40,7 +40,7 @@ jobs:
             sleep 2
           done
           echo "App did not start in time"
-          docker logs $APP
+          docker logs "$APP"
           exit 1
 
       - name: OWASP ZAP Baseline Scan
@@ -60,4 +60,4 @@ jobs:
 
       - name: Stop app
         if: always()
-        run: docker stop $APP && docker rm $APP
+        run: docker stop "$APP" && docker rm "$APP"
