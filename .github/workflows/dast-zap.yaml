@@ -49,7 +49,7 @@ jobs:
         with:
           target: 'http://${{ env.APP }}:${{ env.PORT }}'
           allow_issue_writing: false
-          network: 'container:${{ env.NET }}' 
+          network: '${{ env.NET }}' 
 
           # Si querés que el job falle cuando ZAP encuentra alertas:
           # fail_action: true
